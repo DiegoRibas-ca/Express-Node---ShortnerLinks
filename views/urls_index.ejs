@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% include ./partials/_header %>
+  <tittle>TyneApp</tittle>
+</head>
+<body>
+  <ul>
+    <% for (i in urls) { %>
+      <li>link: <b><%=urls[i]%></b>   //   And its shortner form with this output: <b><%= i %></b> </li>
+    <% }; %>
+
+  </ul>
+  You can Short your Link HERE =>> <a href="">Shortner</a>
+</body>
+</html>
