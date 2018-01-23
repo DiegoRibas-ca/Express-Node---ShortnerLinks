@@ -33,9 +33,6 @@ app.post("/urls", (req, res) => {
   res.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
 
-
-
-
 app.get("/", function(req, res) {
   res.end("Hello!");
 });
@@ -47,8 +44,13 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id };
-  // console.log(req.params);
   res.render("urls_show", templateVars);
+});
+
+app.get("/u/:shortURL", (req, res) => {
+    let shortURL = req.params.shortURL
+    let longURL = urlDatabase[shortURL]
+    res.redirect(longURL);
 });
 
 
