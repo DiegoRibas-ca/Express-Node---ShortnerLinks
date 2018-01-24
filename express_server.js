@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser')
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser())
+app.use(cookieParser());
 
 function generateRandomString() {
    const vocabulary = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
@@ -55,7 +55,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
 //UPDATE ShortURL - urls_show template
-app.post("/urls/:id", (req, res) => {
+app.post("/urls/:id/update", (req, res) => {
   let shortUpdate = req.params.id;
   urlDatabase[shortUpdate] = req.body.longURL;
   console.log(urlDatabase);  // debug statement to see POST parameters
@@ -73,6 +73,11 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+//COOKIE - username sign in buttom
+app.post("/login", (req, res) => {
+  res.cookie("username", req.body.username);
+  res.redirect("/urls");
+});
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
