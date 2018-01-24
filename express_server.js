@@ -27,11 +27,17 @@ app.get("/", function(req, res) {
   res.end("Hello!");
 });
 
-//COOKIE - username sign in buttom
+//COOKIES - username sign in -----------------
 app.post("/login", (req, res) => {
   res.cookie("username", req.body.username);
   res.redirect("/urls");
 });
+//delete username
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
+  res.redirect("/urls");
+});
+//-------------------------------------------
 //ALL MAIN RENDERS BELOW ----------------------
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase,
