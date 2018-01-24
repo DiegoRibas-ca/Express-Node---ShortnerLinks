@@ -8,6 +8,7 @@ app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
+//USEFUL FUNCTIONS
 function generateRandomString() {
    const vocabulary = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
    let output = "";
@@ -17,11 +18,23 @@ function generateRandomString() {
    }
    return output;
 }
-// DATABASE
+// DATABASES
 const urlDatabase ={
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+}
 //ROOT
 app.get("/", function(req, res) {
   res.end("Hello!");
@@ -32,7 +45,7 @@ app.post("/login", (req, res) => {
   res.cookie("username", req.body.username);
   res.redirect("/urls");
 });
-//delete username
+//delete username from cookies
 app.post("/logout", (req, res) => {
   res.clearCookie("username");
   res.redirect("/urls");
@@ -52,6 +65,10 @@ app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id,
   username: req.cookies["username"] };
   res.render("urls_show", templateVars);
+});
+app.get("/register", (req, res) => {
+  let templateVars = {};
+  res.render("register", templateVars);
 });
 // ---------------------------------------
 app.post("/urls", (req, res) => {
@@ -77,7 +94,7 @@ app.post("/urls/:id/update", (req, res) => {
   console.log(urlDatabase);  // debug statement to see POST parameters
   res.redirect("/urls");
 });
-
+//Main Utility - when shortURL is used URL
 app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL
   let longURL = urlDatabase[shortURL]
@@ -88,6 +105,8 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+
+//USELESS - EXAMPLE
 app.get("/hello", (req, res) => {
   res.end(`<html>
             <body>Hello<b>World</b>
