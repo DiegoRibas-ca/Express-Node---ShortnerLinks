@@ -17,27 +17,43 @@ function generateRandomString() {
    }
    return output;
 }
-
+// DATABASE
 const urlDatabase ={
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
-
+//ROOT
 app.get("/", function(req, res) {
   res.end("Hello!");
 });
 
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+//COOKIE - username sign in buttom
+app.post("/login", (req, res) => {
+  res.cookie("username", req.body.username);
+  res.redirect("/urls");
 });
-
+//ALL MAIN RENDERS BELOW ----------------------
+app.get("/urls", (req, res) => {
+  let templateVars = { urls: urlDatabase,
+  username: req.cookies["username"] };
+  res.render("urls_index", templateVars);
+});
+app.get("/urls/new", (req, res) => {
+    let templateVars = { username: req.cookies["username"] };
+  res.render("urls_new", templateVars);
+});
+app.get("/urls/:id", (req, res) => {
+  let templateVars = { shortURL: req.params.id,
+  username: req.cookies["username"] };
+  res.render("urls_show", templateVars);
+});
+// ---------------------------------------
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   console.log(urlDatabase);  // debug statement to see POST parameters
   res.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
-
 //DELETE url - url_index template post buttom
 app.post("/urls/:id/delete", (req, res) => {
   let urlDetele = req.params.id;
@@ -48,12 +64,6 @@ app.post("/urls/:id/delete", (req, res) => {
   };
   res.redirect("/urls");
 });
-
-app.get("/urls/:id", (req, res) => {
-  let templateVars = { shortURL: req.params.id };
-  res.render("urls_show", templateVars);
-});
-
 //UPDATE ShortURL - urls_show template
 app.post("/urls/:id/update", (req, res) => {
   let shortUpdate = req.params.id;
@@ -62,21 +72,10 @@ app.post("/urls/:id/update", (req, res) => {
   res.redirect("/urls");
 });
 
-app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
-  res.render("urls_index", templateVars);
-});
-
 app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL
   let longURL = urlDatabase[shortURL]
   res.redirect(longURL);
-});
-
-//COOKIE - username sign in buttom
-app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("/urls");
 });
 
 app.get("/urls.json", (req, res) => {
