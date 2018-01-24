@@ -9,10 +9,17 @@
 <body>
   <ul>
     <% for (i in urls) { %>
-      <li>link: <b><%=urls[i]%></b>   //   And its shortner form with this output: <b><%= i %></b> </li>
+      <li> <b><%= i %></b> --> <b><%=urls[i]%></b><a href="/urls/<%= i %>">Edit</a>
+        <form method="POST" action="/urls/<%=i%>/delete">
+          <input type="submit" value="DELETE">
+        </form>
+      </li>
     <% }; %>
-
   </ul>
   You can Short your Link HERE =>> <a href="">Shortner</a>
 </body>
 </html>
+
+
+
+
