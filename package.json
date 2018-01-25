@@ -1,0 +1,28 @@
+{
+  "name": "express_library",
+  "version": "1.0.0",
+  "description": "",
+  "main": "express_server.js",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "cookie-parser": "^1.4.3",
+    "ejs": "^2.5.7",
+    "express": "^4.16.2",
+    "morgan": "^1.9.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon -L express_server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DiegoRibas-ca/Shortner-URL---LH-project.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DiegoRibas-ca/Shortner-URL---LH-project/issues"
+  },
+  "homepage": "https://github.com/DiegoRibas-ca/Shortner-URL---LH-project#readme"
+}

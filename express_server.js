@@ -2,11 +2,13 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 8080;
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
+// const morgan = require('morgan');
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
+// morgan('tiny');
 
 //USEFUL FUNCTIONS
 function generateRandomString() {
@@ -24,6 +26,14 @@ function lookForRepeat(keyRequested, key, object) {
       return true;
     };
   };
+};
+function findUsersEmail(email) {
+  for (i in users) {
+    if(users[i].email === email) {
+      return users[i].id;
+    };
+  };
+  return false;
 };
 
 // DATABASES
@@ -45,38 +55,47 @@ const users = {
 }
 //ROOT
 app.get("/", function(req, res) {
-  res.end("Hello!");
-});
-
-//COOKIES - username sign in -----------------
-app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
+  // res.end("Hello!");
   res.redirect("/urls");
 });
-//delete username from cookies
+
+//COOKIES - user_id sign in -----------------
+app.post("/login", (req, res) => {
+  res.cookie("user_id", findUsersEmail(req.body.email));
+  res.redirect("/urls");
+});
+//delete user_id from cookies
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 //-------------------------------------------
 //ALL MAIN RENDERS BELOW ----------------------
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase,
-  username: req.cookies["username"] };
+  user: users[req.cookies["user_id"]]
+  // username: req.cookies["username"]
+  };
   res.render("urls_index", templateVars);
 });
 app.get("/urls/new", (req, res) => {
-    let templateVars = { username: req.cookies["username"] };
+  let templateVars = { user: users[req.cookies["user_id"]] };
   res.render("urls_new", templateVars);
 });
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id,
-  username: req.cookies["username"] };
+  user: users[req.cookies["user_id"]]
+  // username: req.cookies["username"]
+};
   res.render("urls_show", templateVars);
 });
 app.get("/register", (req, res) => {
   let templateVars = {};
   res.render("register", templateVars);
+});
+app.get("/login", (req, res) => {
+  let templateVars = {};
+  res.render("login", templateVars);
 });
 // ---------------------------------------
 //SHORT LINK GENERATOR
@@ -84,7 +103,7 @@ app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   console.log(urlDatabase);  // debug statement to see POST parameters
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  res.redirect("/urls");
 });
 //Main Utility - when shortURL is used URL
 app.get("/u/:shortURL", (req, res) => {

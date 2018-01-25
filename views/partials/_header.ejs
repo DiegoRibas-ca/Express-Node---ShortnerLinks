@@ -1,12 +1,12 @@
 <tittle>Welcome to the SHORTNER APP</tittle>
-  <% if (username) { %>
-    <h2>Username: <%=username%></h2>
-    <form action="/logout" method="POST">
-      <input type="submit" value="Logout">
-    </form>
+  <% if (user) { %>
+    <h2>Username: <%=user.id%></h2>
+    <li>
+      <form action="/logout" method="POST">
+      <input type="submit"  value="Logout">
+      </form>
+    </li>
   <% } else { %>
-    <form action="/login" method="POST">
-      <input type="text" name="username">
-      <input type="submit" value="Sign in">
-    </form>
+    <a href="/Login"><input type="submit" value="SIGN IN" ></a>
+    <a href="/Register"><input type="submit" value="REGISTER" ></a>
   <% }; %>
