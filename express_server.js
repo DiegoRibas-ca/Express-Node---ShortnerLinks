@@ -18,6 +18,14 @@ function generateRandomString() {
    }
    return output;
 }
+function lookForRepeat(keyRequested, key, object) {
+  for (i in object) {
+    if (object[i][key] === keyRequested) {
+      return true;
+    };
+  };
+};
+
 // DATABASES
 const urlDatabase ={
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -90,10 +98,16 @@ app.post("/register", (req, res) => {
   let user_id = generateRandomString();
   let user_email = req.body.email;
   let user_password = req.body.password;
+  if (!user_email || !user_password) {
+    res.status(400).send("Blank email or password");
+  } else if (lookForRepeat(user_email, "email", users)) {
+    res.status(400).send("E-mail already exist");
+  } else {
   users[user_id] = {"id": user_id, "email": user_email, "password": user_password };
   res.cookie("user_id", user_id);
-  console.log(users);
+  // console.log(users); //debug
   res.redirect("/urls");
+  }
 });
 //DELETE url - url_index template post buttom
 app.post("/urls/:id/delete", (req, res) => {
