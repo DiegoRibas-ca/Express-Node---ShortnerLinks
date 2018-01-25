@@ -71,11 +71,29 @@ app.get("/register", (req, res) => {
   res.render("register", templateVars);
 });
 // ---------------------------------------
+//SHORT LINK GENERATOR
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   console.log(urlDatabase);  // debug statement to see POST parameters
   res.send("Ok");         // Respond with 'Ok' (we will replace this)
+});
+//Main Utility - when shortURL is used URL
+app.get("/u/:shortURL", (req, res) => {
+  let shortURL = req.params.shortURL
+  let longURL = urlDatabase[shortURL]
+  res.redirect(longURL);
+});
+//------------------------------------------
+//REGISTER treatment
+app.post("/register", (req, res) => {
+  let user_id = generateRandomString();
+  let user_email = req.body.email;
+  let user_password = req.body.password;
+  users[user_id] = {"id": user_id, "email": user_email, "password": user_password };
+  res.cookie("user_id", user_id);
+  console.log(users);
+  res.redirect("/urls");
 });
 //DELETE url - url_index template post buttom
 app.post("/urls/:id/delete", (req, res) => {
@@ -94,12 +112,13 @@ app.post("/urls/:id/update", (req, res) => {
   console.log(urlDatabase);  // debug statement to see POST parameters
   res.redirect("/urls");
 });
-//Main Utility - when shortURL is used URL
-app.get("/u/:shortURL", (req, res) => {
-  let shortURL = req.params.shortURL
-  let longURL = urlDatabase[shortURL]
-  res.redirect(longURL);
-});
+
+
+
+
+
+
+
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
