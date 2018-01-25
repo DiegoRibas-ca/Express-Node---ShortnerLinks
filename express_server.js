@@ -3,14 +3,14 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
-// const morgan = require('morgan');
+const morgan = require('morgan');
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
-// morgan('tiny');
+app.use(morgan('dev'))
 
-//USEFUL FUNCTIONS
+//USEFUL FUNCTIONS -----------------------------------------------------------------
 function generateRandomString() {
    const vocabulary = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
    let output = "";
@@ -43,11 +43,35 @@ function findUsersPassword(password) {
   };
   return false;
 };
+function checkUser(req, res, next) {
+  console.log(req.path);
+  if (req.path === "/login" || req.path ==="/register" || req.path === "/urls") {
+    next()
+    return
+  }
+  let currentUser = req.cookies.user_id;
+  //FIND IN DATABASE FIRST
+  if (currentUser) {
+    console.log('User is logged in!', currentUser);
+    next()
+  }
+  else {
+    res.redirect('/login')
+  }
+}
+app.use(checkUser);
 
+// -------------------------------------------------------------------------------
 // DATABASES
+const urlDatabase2 = {
+  "userRandomID": { "b2xVn2": "http://www.lighthouselabs.ca",
+            userID: "userRandomID" },
+  "user2RandomID":  { "9sm5xK": "http://www.google.com",
+            userID: "user2RandomID" },
+};
 const urlDatabase ={
   "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  "9sm5xK": "http://www.google.com"
 };
 const users = {
   "userRandomID": {
@@ -76,6 +100,7 @@ app.post("/logout", (req, res) => {
 //-------------------------------------------
 //ALL MAIN RENDERS BELOW ----------------------
 app.get("/urls", (req, res) => {
+  console.log(urlDatabase2[req.cookies["user_id"]])
   let templateVars = { urls: urlDatabase,
   user: users[req.cookies["user_id"]]
   };
@@ -127,6 +152,15 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
   }
 });
+app.post("/urls/:id/delete", (req, res) => {
+  let urlDetele = req.params.id;
+  for (let lookKey in urlDatabase) {
+    if(lookKey == urlDetele) {
+      delete urlDatabase[lookKey];
+    };
+  };
+  res.redirect("/urls");
+});
 // ---------------------------------------
 //SHORT LINK GENERATOR
 app.post("/urls", (req, res) => {
@@ -142,15 +176,6 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 //DELETE url - url_index template post buttom
-app.post("/urls/:id/delete", (req, res) => {
-  let urlDetele = req.params.id;
-  for (let lookKey in urlDatabase) {
-    if(lookKey == urlDetele) {
-      delete urlDatabase[lookKey];
-    };
-  };
-  res.redirect("/urls");
-});
 //UPDATE ShortURL - urls_show template
 app.post("/urls/:id/update", (req, res) => {
   let shortUpdate = req.params.id;
