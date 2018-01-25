@@ -35,6 +35,14 @@ function findUsersEmail(email) {
   };
   return false;
 };
+function findUsersPassword(password) {
+  for (i in users) {
+    if(users[i].password === password) {
+      return users[i].password;
+    };
+  };
+  return false;
+};
 
 // DATABASES
 const urlDatabase ={
@@ -59,11 +67,7 @@ app.get("/", function(req, res) {
   res.redirect("/urls");
 });
 
-//COOKIES - user_id sign in -----------------
-app.post("/login", (req, res) => {
-  res.cookie("user_id", findUsersEmail(req.body.email));
-  res.redirect("/urls");
-});
+
 //delete user_id from cookies
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
@@ -74,7 +78,6 @@ app.post("/logout", (req, res) => {
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase,
   user: users[req.cookies["user_id"]]
-  // username: req.cookies["username"]
   };
   res.render("urls_index", templateVars);
 });
@@ -85,7 +88,6 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id,
   user: users[req.cookies["user_id"]]
-  // username: req.cookies["username"]
 };
   res.render("urls_show", templateVars);
 });
@@ -96,6 +98,34 @@ app.get("/register", (req, res) => {
 app.get("/login", (req, res) => {
   let templateVars = {};
   res.render("login", templateVars);
+});
+//REGISTER treatment
+app.post("/register", (req, res) => {
+  let user_id = generateRandomString();
+  let user_email = req.body.email;
+  let user_password = req.body.password;
+  if (!user_email || !user_password) {
+    res.status(400).send("Blank email or password");
+  } else if (lookForRepeat(user_email, "email", users)) {
+    res.status(400).send("E-mail already exist");
+  } else {
+  users[user_id] = {"id": user_id, "email": user_email, "password": user_password };
+  res.cookie("user_id", user_id);
+  res.redirect("/urls");
+  }
+});
+//LOGIN treatment
+app.post("/login", (req, res) => {
+  let user_email = findUsersEmail(req.body.email);
+  let user_password = findUsersPassword(req.body.password);
+  if ((user_email) === false) {
+    res.status(403).send("E-mail does NOT exist");
+  } else if ((user_password) === false) {
+    res.status(403).send("Password Incorrect");
+  } else {
+  res.cookie("user_id", findUsersEmail(req.body.email));
+  res.redirect("/urls");
+  }
 });
 // ---------------------------------------
 //SHORT LINK GENERATOR
@@ -110,23 +140,6 @@ app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL
   let longURL = urlDatabase[shortURL]
   res.redirect(longURL);
-});
-//------------------------------------------
-//REGISTER treatment
-app.post("/register", (req, res) => {
-  let user_id = generateRandomString();
-  let user_email = req.body.email;
-  let user_password = req.body.password;
-  if (!user_email || !user_password) {
-    res.status(400).send("Blank email or password");
-  } else if (lookForRepeat(user_email, "email", users)) {
-    res.status(400).send("E-mail already exist");
-  } else {
-  users[user_id] = {"id": user_id, "email": user_email, "password": user_password };
-  res.cookie("user_id", user_id);
-  // console.log(users); //debug
-  res.redirect("/urls");
-  }
 });
 //DELETE url - url_index template post buttom
 app.post("/urls/:id/delete", (req, res) => {
@@ -145,6 +158,7 @@ app.post("/urls/:id/update", (req, res) => {
   console.log(urlDatabase);  // debug statement to see POST parameters
   res.redirect("/urls");
 });
+//------------------------------------------
 
 
 
