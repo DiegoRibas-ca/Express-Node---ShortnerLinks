@@ -55,6 +55,16 @@ function checkUser(req, res, next) {
 }
 app.use(checkUser);
 
+function urlsForUser(id) {
+  databaseUrlUser = {};
+  for (i in urlDatabase) {
+    if (urlDatabase[i]["userID"] === id) {
+      databaseUrlUser[i] = urlDatabase[i];
+    };
+  };
+  return databaseUrlUser;
+};
+
 // -------------------------------------------------------------------------------
 // DATABASES
 const urlDatabase = {
@@ -84,7 +94,7 @@ app.get("/", function(req, res) {
 
 //ALL MAIN RENDERS BELOW ----------------------
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase,
+  let templateVars = { urls: urlsForUser(req.cookies["user_id"]),
   user: users[req.cookies["user_id"]]
   };
   res.render("urls_index", templateVars);
@@ -98,7 +108,11 @@ app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id,
   user: users[req.cookies["user_id"]]
 };
-  res.render("urls_show", templateVars);
+  if (Object.keys(urlsForUser(req.cookies["user_id"]))[0] === req.params.id) {
+    res.render("urls_show", templateVars);
+  } else {
+    res.status(400).send("This feature is not possible for your user, come back");
+  }
 });
 app.get("/register", (req, res) => {
   let templateVars = {};
@@ -148,8 +162,8 @@ app.post("/urls", (req, res) => {
 });
 //Main Utility - when shortURL is used URL
 app.get("/u/:shortURL", (req, res) => {
-  let shortURL = req.params.shortURL
-  let longURL = urlDatabase[shortURL]
+  let shortURL = req.params.shortURL;
+  let longURL = urlDatabase[shortURL]["website"];
   res.redirect(longURL);
 });
 //DELETE url - url_index template post buttom
