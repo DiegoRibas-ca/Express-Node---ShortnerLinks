@@ -2,14 +2,20 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 8080;
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session')
 const morgan = require('morgan');
 const bcrypt = require('bcrypt');
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
 app.use(morgan('dev'))
+
+// app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["trying something"]
+}));
 
 //USEFUL FUNCTIONS -----------------------------------------------------------------
 function generateRandomString() {
@@ -46,7 +52,7 @@ function findUsersPassword(password) {
   return false;
 };
 function checkUser(req, res, next) {
-  let currentUser = req.cookies.user_id;
+  let currentUser = req.session.user_id;
   if (req.path === "/urls/new" && lookForRepeat(currentUser, "id", users) === false) {
   // if (req.path === "/login" || req.path ==="/register" || req.path === "/urls" || req.path === "/") {
     res.redirect('/login')
@@ -95,21 +101,22 @@ app.get("/", function(req, res) {
 
 //ALL MAIN RENDERS BELOW ----------------------
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlsForUser(req.cookies["user_id"]),
-  user: users[req.cookies["user_id"]]
+
+  let templateVars = { urls: urlsForUser(req.session.user_id),
+  user: users[req.session.user_id]
   };
   res.render("urls_index", templateVars);
 });
 app.get("/urls/new", (req, res) => {
-  let templateVars = { user: users[req.cookies["user_id"]] };
+  let templateVars = { user: users[req.session.user_id] };
   res.render("urls_new", templateVars);
 });
   // console.log(urlDatabase2[users.])
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id,
-  user: users[req.cookies["user_id"]]
+  user: users[req.session.user_id]
 };
-  if (Object.keys(urlsForUser(req.cookies["user_id"]))[0] === req.params.id) {
+  if (Object.keys(urlsForUser(req.session.user_id))[0] === req.params.id) {
     res.render("urls_show", templateVars);
   } else {
     res.status(400).send("This feature is not possible for your user, come back");
@@ -128,6 +135,7 @@ app.post("/register", (req, res) => {
   let user_id = generateRandomString();
   let user_email = req.body.email;
   const user_password = bcrypt.hashSync(req.body.password, 10);
+  console.log(user_password);
   if (!user_email || !user_password) {
     res.status(400).send("Blank email or password");
   } else if (lookForRepeat(user_email, "email", users)) {
@@ -138,15 +146,14 @@ app.post("/register", (req, res) => {
     "email": user_email,
     "password": user_password
   };
-  res.cookie("user_id", user_id);
+  req.session.user_id = user_id
+  // res.cookie("user_id", user_id);
   res.redirect("/urls");
   }
 });
 //LOGIN treatment
 app.post("/login", (req, res) => {
-
   let user_id = findUsersIdByEmail(req.body.email);
-
   if (user_id && bcrypt.compareSync(req.body.password, users[user_id].password)) {
     res.cookie("user_id", user_id);
     res.redirect("/urls");
@@ -160,7 +167,7 @@ app.post("/login", (req, res) => {
 //SHORT LINK GENERATOR
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
-  let user_id = req.cookies.user_id;
+  let user_id = req.session.user_id;
   urlDatabase[shortURL] = { "website":req.body.longURL,
   "userID": user_id };
   console.log(urlDatabase[shortURL]);  // debug statement to see POST parameters
@@ -175,7 +182,7 @@ app.get("/u/:shortURL", (req, res) => {
 //DELETE url - url_index template post buttom
 app.post("/urls/:id/delete", (req, res) => {
   let urlDetele = req.params.id;
-  let user_id = req.cookies.user_id;
+  let user_id = req.session.user_id;
   for (let lookKey in urlDatabase) {
     if(lookKey == urlDetele && urlDatabase[lookKey]["userID"] === user_id) {
       delete urlDatabase[lookKey];
@@ -186,7 +193,7 @@ app.post("/urls/:id/delete", (req, res) => {
 //UPDATE ShortURL - urls_show template
 app.post("/urls/:id/update", (req, res) => {
   let shortUpdate = req.params.id;
-  let user_id = req.cookies.user_id;
+  let user_id = req.session.user_id;
   for (let lookKey in urlDatabase) {
     if(lookKey == shortUpdate && urlDatabase[lookKey]["userID"] === user_id) {
       urlDatabase[shortUpdate]["website"] = req.body.longURL;
@@ -197,7 +204,7 @@ app.post("/urls/:id/update", (req, res) => {
 });
 //delete user_id from cookies
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  res.clearCookie("session");
   res.redirect("/urls");
 });
 //------------------------------------------
