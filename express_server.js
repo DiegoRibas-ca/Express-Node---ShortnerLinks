@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 8080;
 const bodyParser = require("body-parser");
-// const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser'); // keeping to remind later
 const cookieSession = require('cookie-session')
 const morgan = require('morgan');
 const bcrypt = require('bcrypt');
@@ -10,8 +10,7 @@ const bcrypt = require('bcrypt');
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'))
-
-// app.use(cookieParser());
+// app.use(cookieParser()); // keeping to remind later
 app.use(cookieSession({
   name: 'session',
   keys: ["trying something"]
@@ -54,9 +53,8 @@ function findUsersPassword(password) {
 function checkUser(req, res, next) {
   let currentUser = req.session.user_id;
   if (req.path === "/urls/new" && lookForRepeat(currentUser, "id", users) === false) {
-  // if (req.path === "/login" || req.path ==="/register" || req.path === "/urls" || req.path === "/") {
     res.redirect('/login')
-    return
+    return;
   }
   next();
 }
@@ -84,20 +82,20 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "1234" //shouldn`t work because my passwords are passing through bcrypt now
   },
  "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: "4567"
   }
 }
+
 //ROOT
 app.get("/", function(req, res) {
   // res.end("Hello!");
   res.redirect("/urls");
 });
-
 
 //ALL MAIN RENDERS BELOW ----------------------
 app.get("/urls", (req, res) => {
@@ -111,7 +109,6 @@ app.get("/urls/new", (req, res) => {
   let templateVars = { user: users[req.session.user_id] };
   res.render("urls_new", templateVars);
 });
-  // console.log(urlDatabase2[users.])
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id,
   user: users[req.session.user_id]
@@ -130,7 +127,8 @@ app.get("/login", (req, res) => {
   let templateVars = {};
   res.render("login", templateVars);
 });
-//REGISTER treatment
+
+//REGISTER treatment ------------------------------
 app.post("/register", (req, res) => {
   let user_id = generateRandomString();
   let user_email = req.body.email;
@@ -147,7 +145,7 @@ app.post("/register", (req, res) => {
     "password": user_password
   };
   req.session.user_id = user_id
-  // res.cookie("user_id", user_id);
+  // res.cookie("user_id", user_id); //just to remind later that I replaced to cookie session
   res.redirect("/urls");
   }
 });
@@ -163,14 +161,13 @@ app.post("/login", (req, res) => {
     res.status(403).send("Password Incorrect");
   }
 });
-// ---------------------------------------
+// --------------------------------------------------------
 //SHORT LINK GENERATOR
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let user_id = req.session.user_id;
   urlDatabase[shortURL] = { "website":req.body.longURL,
   "userID": user_id };
-  console.log(urlDatabase[shortURL]);  // debug statement to see POST parameters
   res.redirect("/urls");
 });
 //Main Utility - when shortURL is used URL
@@ -209,11 +206,9 @@ app.post("/logout", (req, res) => {
 });
 //------------------------------------------
 
-
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
-
 
 //USELESS - EXAMPLE
 app.get("/hello", (req, res) => {
