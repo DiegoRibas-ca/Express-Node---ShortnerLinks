@@ -4,6 +4,7 @@ const PORT = process.env.PORT || 8080;
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
+const bcrypt = require('bcrypt');
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -28,7 +29,7 @@ function lookForRepeat(keyRequested, key, object) {
   };
   return false;
 };
-function findUsersEmail(email) {
+function findUsersIdByEmail(email) {
   for (i in users) {
     if(users[i].email === email) {
       return users[i].id;
@@ -126,28 +127,33 @@ app.get("/login", (req, res) => {
 app.post("/register", (req, res) => {
   let user_id = generateRandomString();
   let user_email = req.body.email;
-  let user_password = req.body.password;
+  const user_password = bcrypt.hashSync(req.body.password, 10);
   if (!user_email || !user_password) {
     res.status(400).send("Blank email or password");
   } else if (lookForRepeat(user_email, "email", users)) {
     res.status(400).send("E-mail already exist");
   } else {
-  users[user_id] = {"id": user_id, "email": user_email, "password": user_password };
+  users[user_id] = {
+    "id": user_id,
+    "email": user_email,
+    "password": user_password
+  };
   res.cookie("user_id", user_id);
   res.redirect("/urls");
   }
 });
 //LOGIN treatment
 app.post("/login", (req, res) => {
-  let user_email = findUsersEmail(req.body.email);
-  let user_password = findUsersPassword(req.body.password);
-  if ((user_email) === false) {
+
+  let user_id = findUsersIdByEmail(req.body.email);
+
+  if (user_id && bcrypt.compareSync(req.body.password, users[user_id].password)) {
+    res.cookie("user_id", user_id);
+    res.redirect("/urls");
+  } else if ((user_id) === false) {
     res.status(403).send("E-mail does NOT exist");
-  } else if ((user_password) === false) {
-    res.status(403).send("Password Incorrect");
   } else {
-  res.cookie("user_id", findUsersEmail(req.body.email));
-  res.redirect("/urls");
+    res.status(403).send("Password Incorrect");
   }
 });
 // ---------------------------------------
