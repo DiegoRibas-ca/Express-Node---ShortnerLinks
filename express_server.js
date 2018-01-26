@@ -26,6 +26,7 @@ function lookForRepeat(keyRequested, key, object) {
       return true;
     };
   };
+  return false;
 };
 function findUsersEmail(email) {
   for (i in users) {
@@ -44,34 +45,23 @@ function findUsersPassword(password) {
   return false;
 };
 function checkUser(req, res, next) {
-  console.log(req.path);
-  if (req.path === "/login" || req.path ==="/register" || req.path === "/urls") {
-    next()
+  let currentUser = req.cookies.user_id;
+  if (req.path === "/urls/new" && lookForRepeat(currentUser, "id", users) === false) {
+  // if (req.path === "/login" || req.path ==="/register" || req.path === "/urls" || req.path === "/") {
+    res.redirect('/login')
     return
   }
-  let currentUser = req.cookies.user_id;
-  //FIND IN DATABASE FIRST
-  if (currentUser) {
-    console.log('User is logged in!', currentUser);
-    next()
-  }
-  else {
-    res.redirect('/login')
-  }
+  next();
 }
 app.use(checkUser);
 
 // -------------------------------------------------------------------------------
 // DATABASES
-const urlDatabase2 = {
-  "userRandomID": { "b2xVn2": "http://www.lighthouselabs.ca",
+const urlDatabase = {
+  "b2xVn2": { website: "http://www.lighthouselabs.ca",
             userID: "userRandomID" },
-  "user2RandomID":  { "9sm5xK": "http://www.google.com",
+  "9sm5xK":  { website: "http://www.google.com",
             userID: "user2RandomID" },
-};
-const urlDatabase ={
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
 };
 const users = {
   "userRandomID": {
@@ -92,15 +82,8 @@ app.get("/", function(req, res) {
 });
 
 
-//delete user_id from cookies
-app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
-  res.redirect("/urls");
-});
-//-------------------------------------------
 //ALL MAIN RENDERS BELOW ----------------------
 app.get("/urls", (req, res) => {
-  console.log(urlDatabase2[req.cookies["user_id"]])
   let templateVars = { urls: urlDatabase,
   user: users[req.cookies["user_id"]]
   };
@@ -110,6 +93,7 @@ app.get("/urls/new", (req, res) => {
   let templateVars = { user: users[req.cookies["user_id"]] };
   res.render("urls_new", templateVars);
 });
+  // console.log(urlDatabase2[users.])
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id,
   user: users[req.cookies["user_id"]]
@@ -152,21 +136,14 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
   }
 });
-app.post("/urls/:id/delete", (req, res) => {
-  let urlDetele = req.params.id;
-  for (let lookKey in urlDatabase) {
-    if(lookKey == urlDetele) {
-      delete urlDatabase[lookKey];
-    };
-  };
-  res.redirect("/urls");
-});
 // ---------------------------------------
 //SHORT LINK GENERATOR
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-  console.log(urlDatabase);  // debug statement to see POST parameters
+  let user_id = req.cookies.user_id;
+  urlDatabase[shortURL] = { "website":req.body.longURL,
+  "userID": user_id };
+  console.log(urlDatabase[shortURL]);  // debug statement to see POST parameters
   res.redirect("/urls");
 });
 //Main Utility - when shortURL is used URL
@@ -176,20 +153,34 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 //DELETE url - url_index template post buttom
+app.post("/urls/:id/delete", (req, res) => {
+  let urlDetele = req.params.id;
+  let user_id = req.cookies.user_id;
+  for (let lookKey in urlDatabase) {
+    if(lookKey == urlDetele && urlDatabase[lookKey]["userID"] === user_id) {
+      delete urlDatabase[lookKey];
+    };
+  };
+  res.redirect("/urls");
+});
 //UPDATE ShortURL - urls_show template
 app.post("/urls/:id/update", (req, res) => {
   let shortUpdate = req.params.id;
-  urlDatabase[shortUpdate] = req.body.longURL;
-  console.log(urlDatabase);  // debug statement to see POST parameters
+  let user_id = req.cookies.user_id;
+  for (let lookKey in urlDatabase) {
+    if(lookKey == shortUpdate && urlDatabase[lookKey]["userID"] === user_id) {
+      urlDatabase[shortUpdate]["website"] = req.body.longURL;
+      console.log(urlDatabase.shortUpdate);  // debug statement to see POST parameters
+    }
+  }
+  res.redirect("/urls");
+});
+//delete user_id from cookies
+app.post("/logout", (req, res) => {
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 //------------------------------------------
-
-
-
-
-
-
 
 
 app.get("/urls.json", (req, res) => {

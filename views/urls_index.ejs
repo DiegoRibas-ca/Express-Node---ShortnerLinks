@@ -9,7 +9,7 @@
 <body>
   <ul>
     <% for (i in urls) { %>
-      <li> <b><%= i %></b> --> <b><%=urls[i]%></b><a href="/urls/<%= i %>">Edit</a>
+      <li> <b><%= i %></b> --> <b><%=urls[i]["website"]%></b><a href="/urls/<%= i %>">Edit</a>
         <form method="POST" action="/urls/<%=i%>/delete">
           <input type="submit" value="DELETE">
         </form>
