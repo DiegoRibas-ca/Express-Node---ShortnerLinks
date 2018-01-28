@@ -153,7 +153,8 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
   let user_id = findUsersIdByEmail(req.body.email);
   if (user_id && bcrypt.compareSync(req.body.password, users[user_id].password)) {
-    res.cookie("user_id", user_id);
+    req.session.user_id = user_id
+    // res.cookie("user_id", user_id);
     res.redirect("/urls");
   } else if ((user_id) === false) {
     res.status(403).send("E-mail does NOT exist");
